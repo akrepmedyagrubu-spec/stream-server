@@ -4,14 +4,15 @@ mkdir -p hls
 
 while true
 do
-  echo "scene alınıyor..."
+  echo "playlist çekiliyor..."
 
-  curl -s https://github.com/akrepmedyagrubu-spec/yayin-panel/blob/main/scene.json -o scene.json
+  curl -s http://akrepyayin.site.je/playlist.json -o playlist.json
 
-  TEXT=$(jq -r '.elements[]?.text' scene.json 2>/dev/null | head -n1)
+  rm -f list.txt
 
-  ffmpeg -re -stream_loop -1 -i video.mp4 \
-  -vf "drawtext=text='${TEXT:-YAYIN}':x=20:y=20:fontsize=30:fontcolor=white" \
+  jq -r '.playlist[] | "file \(. )"' playlist.json > list.txt
+
+  ffmpeg -re -f concat -safe 0 -stream_loop -1 -i list.txt \
   -c:v libx264 -preset veryfast -b:v 1000k \
   -c:a aac -b:a 128k \
   -f hls \
